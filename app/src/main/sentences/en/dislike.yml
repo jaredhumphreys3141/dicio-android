@@ -1,4 +1,4 @@
-dislike:
+thumbs_down:
   - dislike|downvote (this|the|that|current)? song|track|music|video?
   - thumbs down (this|the|that|current)? (song|track|music|video)?
   - give (this|the|that|current)? (song|track|music|video)? a? thumbs down

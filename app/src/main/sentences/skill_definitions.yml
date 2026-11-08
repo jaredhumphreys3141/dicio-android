@@ -48,7 +48,7 @@ skills:
   - id: dislike
     specificity: high
     sentences:
-      - id: dislike
+      - id: thumbs_down
 
   - id: joke
     specificity: high
