@@ -8,6 +8,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.util.Log
+import androidx.core.content.ContextCompat
 import org.dicio.skill.context.SkillContext
 import org.dicio.skill.skill.SkillInfo
 import org.dicio.skill.skill.SkillOutput
@@ -26,7 +27,7 @@ class DislikeSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerDa
 
     override suspend fun generateOutput(ctx: SkillContext, inputData: Dislike): SkillOutput {
         val context = ctx.android
-        val sessionManager = context.getSystemService(MediaSessionManager::class.java)
+        val sessionManager = ContextCompat.getSystemService(context, MediaSessionManager::class.java)
             ?: return DislikeOutput.NoSession
 
         val controllers = try {
