@@ -1,0 +1,6 @@
+dislike:
+  - dislike|downvote (this|the|that|current)? song|track|music|video?
+  - thumbs down (this|the|that|current)? (song|track|music|video)?
+  - give (this|the|that|current)? (song|track|music|video)? a? thumbs down
+  - i (hate|don t like|dont like|do not like) this|the|that song|track|music
+  - never play this|that (song|track)? again

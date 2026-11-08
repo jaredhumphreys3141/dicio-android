@@ -45,6 +45,11 @@ skills:
       - id: previous
       - id: next
 
+  - id: dislike
+    specificity: high
+    sentences:
+      - id: dislike
+
   - id: joke
     specificity: high
     sentences:

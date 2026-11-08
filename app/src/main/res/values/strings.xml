@@ -173,6 +173,15 @@
     <string name="skill_media_previous">Previous media…</string>
     <string name="skill_media_next">Next media…</string>
     <string name="skill_media_no_media_session">No media session is active</string>
+    <string name="skill_name_dislike">Dislike song</string>
+    <string name="skill_sentence_example_dislike">Dislike this song</string>
+    <string name="skill_dislike_done">Disliked</string>
+    <string name="skill_dislike_done_song">Disliked %1$s</string>
+    <string name="skill_dislike_done_song_artist">Disliked %1$s by %2$s</string>
+    <string name="skill_dislike_no_session">Nothing is playing right now</string>
+    <string name="skill_dislike_no_permission">Dicio needs notification access to rate songs</string>
+    <string name="skill_dislike_unsupported">%1$s doesn\'t let other apps dislike songs</string>
+    <string name="skill_dislike_unsupported_actions">%1$s doesn\'t offer a dislike button to other apps. It offers: %2$s</string>
     <string name="skill_calculator_could_not_calculate">I could not calculate your request</string>
     <string name="skill_telephone_unknown_contact">No contact found, try again</string>
     <string name="skill_telephone_found_contacts">I found %1$d contacts, which one shall I call?</string>
