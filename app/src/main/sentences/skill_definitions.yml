@@ -45,10 +45,16 @@ skills:
       - id: previous
       - id: next
 
-  - id: dislike
+  - id: rate
     specificity: high
     sentences:
+      - id: thumbs_up
       - id: thumbs_down
+
+  - id: youtube
+    specificity: high
+    sentences:
+      - id: next_video
 
   - id: joke
     specificity: high

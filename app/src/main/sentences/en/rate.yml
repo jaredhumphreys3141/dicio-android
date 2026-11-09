@@ -1,3 +1,9 @@
+thumbs_up:
+  - like|upvote (this|the|that|current) song|track|music|video
+  - thumbs up (this|the|that|current)? (song|track|music|video)?
+  - give (this|the|that|current)? (song|track|music|video)? a? thumbs up
+  - i (love|really like) this|the|that song|track|music
+
 thumbs_down:
   - dislike|downvote (this|the|that|current)? song|track|music|video?
   - thumbs down (this|the|that|current)? (song|track|music|video)?

@@ -1,0 +1,4 @@
+next_video:
+  - play|(go|switch|skip|jump|(move forward) to)? the? next|following (youtube video|(video (on|in) youtube))
+  - skip (this|the|a)? (youtube video|(video (on|in) youtube))
+  - youtube (next|skip) video?

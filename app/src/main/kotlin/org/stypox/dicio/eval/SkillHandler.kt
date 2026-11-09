@@ -21,7 +21,8 @@ import org.stypox.dicio.skills.current_time.CurrentTimeInfo
 import org.stypox.dicio.skills.fallback.text.TextFallbackInfo
 import org.stypox.dicio.skills.listening.ListeningInfo
 import org.stypox.dicio.skills.lyrics.LyricsInfo
-import org.stypox.dicio.skills.dislike.DislikeInfo
+import org.stypox.dicio.skills.rate.RateInfo
+import org.stypox.dicio.skills.youtube.YoutubeInfo
 import org.stypox.dicio.skills.media.MediaInfo
 import org.stypox.dicio.skills.navigation.NavigationInfo
 import org.stypox.dicio.skills.notify.NotifyInfo
@@ -54,7 +55,8 @@ class SkillHandler @Inject constructor(
         TimerInfo,
         CurrentTimeInfo,
         MediaInfo,
-        DislikeInfo,
+        RateInfo,
+        YoutubeInfo,
         JokeInfo,
         ListeningInfo(dataStore),
         TranslationInfo,
