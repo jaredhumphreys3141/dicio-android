@@ -173,6 +173,11 @@
     <string name="skill_media_previous">Previous media…</string>
     <string name="skill_media_next">Next media…</string>
     <string name="skill_media_no_media_session">No media session is active</string>
+    <string name="wake_service_paused_notification">Wake word paused until YouTube plays</string>
+    <string name="wake_service_mode_only_media">Listens only while YouTube or YouTube Music plays</string>
+    <string name="wake_service_mode_always">Always listening</string>
+    <string name="wake_service_action_always">Always listen</string>
+    <string name="wake_service_action_only_media">Only during YouTube</string>
     <string name="skill_name_rate">Like or dislike song</string>
     <string name="skill_sentence_example_rate">Dislike this song</string>
     <string name="skill_rate_liked">Liked</string>

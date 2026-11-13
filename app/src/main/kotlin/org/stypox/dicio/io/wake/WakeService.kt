@@ -47,6 +47,8 @@ class WakeService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default + job)
 
     private val listening = AtomicBoolean(false)
+    // true while the microphone is released because no trigger app is playing (see MediaWakeGate)
+    private val paused = AtomicBoolean(false)
 
     @Inject
     lateinit var skillEvaluator: SkillEvaluator
@@ -88,6 +90,17 @@ class WakeService : Service() {
         if (intent?.action == ACTION_STOP_WAKE_SERVICE) {
             listening.set(false)
             return START_NOT_STICKY
+        }
+
+        if (intent?.action == ACTION_TOGGLE_MEDIA_GATE) {
+            MediaWakeGate.setOnlyWhileMediaPlays(
+                this, !MediaWakeGate.isOnlyWhileMediaPlays(this))
+            if (listening.get()) {
+                updateForegroundNotification()
+            } else {
+                stopSelf() // the toggle was pressed on a stale notification, nothing to do
+            }
+            return START_STICKY
         }
 
         try {
@@ -147,6 +160,17 @@ class WakeService : Service() {
     }
 
     private fun createForegroundNotification(isHeyDicio: Boolean) {
+        startForeground(FOREGROUND_NOTIFICATION_ID, buildForegroundNotification(isHeyDicio))
+    }
+
+    private fun updateForegroundNotification() {
+        notificationManager.notify(
+            FOREGROUND_NOTIFICATION_ID,
+            buildForegroundNotification(wakeDevice.isHeyDicio.value),
+        )
+    }
+
+    private fun buildForegroundNotification(isHeyDicio: Boolean): android.app.Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 FOREGROUND_NOTIFICATION_CHANNEL_ID,
@@ -157,12 +181,20 @@ class WakeService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(this, FOREGROUND_NOTIFICATION_CHANNEL_ID)
+        val onlyWhileMediaPlays = MediaWakeGate.isOnlyWhileMediaPlays(this)
+        return NotificationCompat.Builder(this, FOREGROUND_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_hearing_white)
             .setContentTitle(
                 getString(
-                    if (isHeyDicio) R.string.wake_service_foreground_notification
+                    if (paused.get()) R.string.wake_service_paused_notification
+                    else if (isHeyDicio) R.string.wake_service_foreground_notification
                     else R.string.wake_custom_service_foreground_notification
+                )
+            )
+            .setContentText(
+                getString(
+                    if (onlyWhileMediaPlays) R.string.wake_service_mode_only_media
+                    else R.string.wake_service_mode_always
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -180,9 +212,21 @@ class WakeService : Service() {
                     PendingIntent.FLAG_IMMUTABLE,
                 ),
             ))
+            .addAction(NotificationCompat.Action(
+                R.drawable.ic_hearing_white,
+                getString(
+                    if (onlyWhileMediaPlays) R.string.wake_service_action_always
+                    else R.string.wake_service_action_only_media
+                ),
+                PendingIntent.getService(
+                    this,
+                    1,
+                    Intent(this, WakeService::class.java)
+                        .apply { action = ACTION_TOGGLE_MEDIA_GATE },
+                    PendingIntent.FLAG_IMMUTABLE,
+                ),
+            ))
             .build()
-
-        startForeground(FOREGROUND_NOTIFICATION_ID, notification)
     }
 
     private fun listenForWakeWord() {
@@ -198,9 +242,33 @@ class WakeService : Service() {
         var audio = ShortArray(0)
         var nextWakeWordAllowed = Instant.MIN
 
+        var recording = false
         try {
-            ar.startRecording()
             while (listening.get()) {
+                if (!MediaWakeGate.shouldListen(this)) {
+                    // release the microphone until YouTube / YouTube Music plays again
+                    if (recording) {
+                        ar.stop()
+                        recording = false
+                    }
+                    if (!paused.getAndSet(true)) {
+                        Log.d(TAG, "Pausing wake word: no trigger app is playing")
+                        updateForegroundNotification()
+                    }
+                    lastHeard.set(Instant.now()) // the service is still running, just paused
+                    Thread.sleep(PAUSED_POLL_MILLIS)
+                    continue
+                }
+
+                if (!recording) {
+                    ar.startRecording()
+                    recording = true
+                }
+                if (paused.getAndSet(false)) {
+                    Log.d(TAG, "Resuming wake word")
+                    updateForegroundNotification()
+                }
+
                 if (audio.size != wakeDevice.frameSize()) {
                     audio = ShortArray(wakeDevice.frameSize())
                 }
@@ -216,7 +284,9 @@ class WakeService : Service() {
                 lastHeard.set(Instant.now())
             }
         } finally {
-            ar.stop()
+            if (recording) {
+                ar.stop()
+            }
             ar.release()
         }
     }
@@ -366,6 +436,9 @@ class WakeService : Service() {
         private const val WAKE_WORD_BACKOFF_MILLIS = 4000L
         private const val ACTION_STOP_WAKE_SERVICE =
             "org.stypox.dicio.io.wake.WakeService.ACTION_STOP"
+        private const val ACTION_TOGGLE_MEDIA_GATE =
+            "org.stypox.dicio.io.wake.WakeService.ACTION_TOGGLE_MEDIA_GATE"
+        private const val PAUSED_POLL_MILLIS = 250L
         private const val RELEASE_STT_RESOURCES_MILLIS = 1000L * 60 * 5 // 5 minutes
     }
 }

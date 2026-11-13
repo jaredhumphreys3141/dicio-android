@@ -2,6 +2,7 @@ package org.stypox.dicio.skills.notify
 
 import android.service.notification.NotificationListenerService
 import android.util.Log
+import org.stypox.dicio.io.wake.MediaWakeGate
 
 open class NotifyHandler: NotificationListenerService() {
     companion object Companion {
@@ -17,6 +18,17 @@ open class NotifyHandler: NotificationListenerService() {
     override fun onDestroy() {
         super.onDestroy()
         Instance = null
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        // lets the wake word only listen while YouTube / YouTube Music is playing
+        MediaWakeGate.attach(this)
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        MediaWakeGate.detach()
     }
 
     fun getActiveNotificationsList(): List<Notification> {
