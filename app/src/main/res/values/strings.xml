@@ -176,6 +176,7 @@
     <string name="wake_service_paused_notification">Wake word paused until YouTube plays</string>
     <string name="wake_service_mode_only_media">Listens only while YouTube or YouTube Music plays</string>
     <string name="wake_service_mode_always">Always listening</string>
+    <string name="wake_service_mode_needs_access">Listening always: tap to give Dicio notification access so it can listen only while YouTube plays</string>
     <string name="wake_service_action_always">Always listen</string>
     <string name="wake_service_action_only_media">Only during YouTube</string>
     <string name="skill_name_rate">Like or dislike song</string>

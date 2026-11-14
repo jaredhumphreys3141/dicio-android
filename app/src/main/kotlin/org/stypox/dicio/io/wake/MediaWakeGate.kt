@@ -46,6 +46,13 @@ object MediaWakeGate {
     /** Whether a trigger app is playing (or stopped playing less than a minute ago). */
     val mediaPlaying: StateFlow<Boolean> = mediaPlayingFlow
 
+    private val attachedFlow = MutableStateFlow(false)
+    /**
+     * Whether media sessions can be observed, i.e. notification access is granted and the
+     * notification listener is connected. Without it the gate cannot know when media plays.
+     */
+    val attached: StateFlow<Boolean> = attachedFlow
+
     private val handler = Handler(Looper.getMainLooper())
     private var stopPending = false
     private val markStoppedRunnable = Runnable {
@@ -87,9 +94,12 @@ object MediaWakeGate {
         prefs?.edit()?.putBoolean(KEY_ONLY_WHILE_MEDIA_PLAYS, value)?.apply()
     }
 
-    /** Whether the wake word service should be recording right now. */
+    /**
+     * Whether the wake word service should be recording right now. If notification access is
+     * missing, playback cannot be observed, so listen anyway rather than never.
+     */
     fun shouldListen(context: Context): Boolean =
-        !isOnlyWhileMediaPlays(context) || mediaPlayingFlow.value
+        !isOnlyWhileMediaPlays(context) || !attachedFlow.value || mediaPlayingFlow.value
 
     // The YouTube app, YouTube Music, and modified builds of them
     private fun isTriggerApp(packageName: String): Boolean =
@@ -108,6 +118,8 @@ object MediaWakeGate {
                 sessionManager?.removeOnActiveSessionsChangedListener(sessionsListener)
                 manager.addOnActiveSessionsChangedListener(sessionsListener, component, handler)
                 sessionManager = manager
+                attachedFlow.value = true
+                Log.d(TAG, "Observing media sessions")
                 updateControllers(manager.getActiveSessions(component))
             } catch (e: SecurityException) {
                 Log.w(TAG, "Notification access not granted, cannot observe media sessions", e)
@@ -120,6 +132,7 @@ object MediaWakeGate {
         handler.post {
             sessionManager?.removeOnActiveSessionsChangedListener(sessionsListener)
             sessionManager = null
+            attachedFlow.value = false
             updateControllers(emptyList())
         }
     }

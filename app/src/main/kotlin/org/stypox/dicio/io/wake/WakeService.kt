@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -49,6 +50,8 @@ class WakeService : Service() {
     private val listening = AtomicBoolean(false)
     // true while the microphone is released because no trigger app is playing (see MediaWakeGate)
     private val paused = AtomicBoolean(false)
+    // whether the notification currently says that notification access is missing
+    private val needsAccessShown = AtomicBoolean(false)
 
     @Inject
     lateinit var skillEvaluator: SkillEvaluator
@@ -182,7 +185,20 @@ class WakeService : Service() {
         }
 
         val onlyWhileMediaPlays = MediaWakeGate.isOnlyWhileMediaPlays(this)
-        return NotificationCompat.Builder(this, FOREGROUND_NOTIFICATION_CHANNEL_ID)
+        val needsAccess = onlyWhileMediaPlays && !MediaWakeGate.attached.value
+        needsAccessShown.set(needsAccess)
+        val builder = NotificationCompat.Builder(this, FOREGROUND_NOTIFICATION_CHANNEL_ID)
+        if (needsAccess) {
+            // tapping the notification opens the notification access settings
+            builder.setContentIntent(PendingIntent.getActivity(
+                this,
+                2,
+                Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                    .addFlags(FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE,
+            ))
+        }
+        return builder
             .setSmallIcon(R.drawable.ic_hearing_white)
             .setContentTitle(
                 getString(
@@ -193,7 +209,8 @@ class WakeService : Service() {
             )
             .setContentText(
                 getString(
-                    if (onlyWhileMediaPlays) R.string.wake_service_mode_only_media
+                    if (needsAccess) R.string.wake_service_mode_needs_access
+                    else if (onlyWhileMediaPlays) R.string.wake_service_mode_only_media
                     else R.string.wake_service_mode_always
                 )
             )
@@ -245,6 +262,13 @@ class WakeService : Service() {
         var recording = false
         try {
             while (listening.get()) {
+                // e.g. notification access was just granted or revoked
+                val needsAccess = MediaWakeGate.isOnlyWhileMediaPlays(this) &&
+                    !MediaWakeGate.attached.value
+                if (needsAccess != needsAccessShown.get()) {
+                    updateForegroundNotification()
+                }
+
                 if (!MediaWakeGate.shouldListen(this)) {
                     // release the microphone until YouTube / YouTube Music plays again
                     if (recording) {
